@@ -1,41 +1,39 @@
+
 from collections import deque
 
 
-def find_path(grid, start, goal):
-    queue = deque([[start]])
-    visited = {start}
+def find_path(grid_map, start, goal):
+    if not grid_map.is_walkable(start):
+        return None
+
+    if not grid_map.is_walkable(goal):
+        return None
+
+    queue = deque([start])
+    parent = {start: None}
 
     while queue:
-        path = queue.popleft()
-        x, y = path[-1]
+        current = queue.popleft()
 
-        if (x, y) == goal:
-            return path
+        if current == goal:
+            path = []
 
-        directions = [
-            (0, 1),
-            (0, -1),
-            (1, 0),
-            (-1, 0)
-        ]
+            while current is not None:
+                path.append(current)
+                current = parent[current]
 
-        for dx, dy in directions:
-            nx, ny = x + dx, y + dy
+            return path[::-1]
 
-            if (
-                0 <= ny < len(grid)
-                and 0 <= nx < len(grid[0])
-                and grid[ny][nx] == 0
-                and (nx, ny) not in visited
-            ):
-                visited.add((nx, ny))
-                queue.append(path + [(nx, ny)])
+        for neighbor in grid_map.get_neighbors(current):
+            if neighbor not in parent:
+                parent[neighbor] = current
+                queue.append(neighbor)
 
     return None
 
 
 def calculate_path_length(path):
-    if path is None:
+    if not path:
         return 0
 
     return len(path) - 1
