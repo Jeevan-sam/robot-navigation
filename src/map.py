@@ -1,4 +1,3 @@
-
 class GridMap:
     def __init__(self, width=10, height=10):
         self.width = width

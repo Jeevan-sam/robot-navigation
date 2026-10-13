@@ -1,26 +1,22 @@
-\
+
 class Robot:
-    def __init__(self, robot_id, start_position):
+    def __init__(self, robot_id, start, goal):
         self.robot_id = robot_id
-        self.position = start_position
+        self.start = start
+        self.goal = goal
+        self.position = start
         self.path = []
-        self.steps_taken = 0
+        self.steps = 0
 
     def set_path(self, path):
-        self.path = path.copy()
+        self.path = path if path else []
+        self.steps = max(0, len(self.path) - 1)
 
-    def move(self):
-        if len(self.path) > 1:
-            self.path.pop(0)
-            self.position = self.path[0]
-            self.steps_taken += 1
-            return True
-
-        return False
+    def move_to(self, position):
+        self.position = position
 
     def __str__(self):
         return (
-            f"Robot {self.robot_id} | "
-            f"Position: {self.position} | "
-            f"Steps: {self.steps_taken}"
+            f"Robot {self.robot_id}: "
+            f"Position={self.position}, Goal={self.goal}"
         )

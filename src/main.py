@@ -5,55 +5,75 @@ from robot import Robot
 from visualize import show_path
 
 
+def reserve_path(path, reservations, max_time=60):
+    if not path:
+        return
+
+    for t in range(max_time + 1):
+        position = path[min(t, len(path) - 1)]
+        reservations["cells"].setdefault(t, set()).add(position)
+
+    for t in range(1, len(path)):
+        previous = path[t - 1]
+        current = path[t]
+
+        reservations["edges"].setdefault(t, set()).add(
+            (current, previous)
+        )
+
+
 def main():
-    grid = GridMap(width=10, height=10)
+    warehouse = GridMap()
 
-    print("=== Robot Navigation System ===")
+    robots = [
+        Robot(1, (0, 0), (9, 0)),
+        Robot(2, (0, 9), (9, 9)),
+        Robot(3, (9, 2), (0, 2))
+    ]
 
-    print("Enter robot start position (0-9):")
-    start_x = int(input("Start X: "))
-    start_y = int(input("Start Y: "))
+    reservations = {
+        "cells": {},
+        "edges": {}
+    }
 
-    print("Enter robot goal position (0-9):")
-    goal_x = int(input("Goal X: "))
-    goal_y = int(input("Goal Y: "))
+    print("=== Multi-Robot Warehouse Planner ===")
+    print("Warehouse size: 10 x 10")
+    print("Obstacles:", sorted(warehouse.obstacles))
 
-    start = (start_x, start_y)
-    goal = (goal_x, goal_y)
+    for robot in robots:
+        path = find_path(
+            warehouse,
+            robot.start,
+            robot.goal,
+            reservations
+        )
 
-    if not grid.is_walkable(start):
-        print("Invalid start position or start is an obstacle!")
-        return
-
-    if not grid.is_walkable(goal):
-        print("Invalid goal position or goal is an obstacle!")
-        return
-
-    print("\nStart:", start)
-    print("Goal:", goal)
-
-    # Find the path BEFORE using it
-    path = find_path(grid, start, goal)
-
-    if path:
-        robot = Robot(robot_id=1, start_position=start)
         robot.set_path(path)
 
-        print("\nPath found!")
-        print("Path:", path)
-        print("Total steps:", calculate_path_length(path))
+        if not path:
+            print(f"\nRobot {robot.robot_id}: No safe path found.")
+            continue
 
-        print("\nRobot movement:")
-        print(robot)
+        reserve_path(path, reservations)
 
-        while robot.move():
-            print(robot)
+        print(f"\nRobot {robot.robot_id}")
+        print("Start:", robot.start)
+        print("Goal:", robot.goal)
+        print("Path:", robot.path)
+        print("Total steps:", calculate_path_length(robot.path))
 
-        # Original path stays unchanged
-        show_path(grid, path, start, goal)
+    successful_robots = [
+        robot for robot in robots if robot.path
+    ]
 
-    else:
-        print("No valid path found.")
+    print("\n=== Planning Summary ===")
+    print(
+        f"Successfully planned: "
+        f"{len(successful_robots)}/{len(robots)} robots"
+    )
+
+    if successful_robots:
+        show_path(warehouse, successful_robots)
 
 
 if __name__ == "__main__":
